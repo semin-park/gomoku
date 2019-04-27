@@ -27,7 +27,8 @@ Action get_action(int turn, int player)
     char b = str[2];
     
     int i = int(a - '0');
-    int j = int(b - '0');
+    int j = int(b - 'A');
+    // int j = int(b - '0');
     
     std::cout << "Action: " << i << ',' << j << std::endl;
     
@@ -45,12 +46,12 @@ int main(int argc, const char * argv[]) {
     state = env.reset();
     int player = env.get_player(state);
 
-    state = env.fast_forward(state, {
-        {4,4},
-        {3,3},
-        {4,2},
+    // state = env.fast_forward(state, {
+    //     {4,4},
+    //     {3,3},
+    //     {4,2},
         
-    });
+    // });
     
     std::cout << "Begin" << std::endl;
     env.print(state);
@@ -70,8 +71,10 @@ int main(int argc, const char * argv[]) {
         player = env.get_player(state);
         turn++;
         
+        auto reward_a = reward.accessor<float, 1>();
+
         if (done)
-            std::cout << "Game finished. Reward: " << reward(0) << ',' << reward(1) << std::endl;
+            std::cout << "Game finished. Reward: " << reward_a[0] << ',' << reward_a[1] << std::endl;
         env.print(state);
         
     }

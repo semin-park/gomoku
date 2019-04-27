@@ -25,7 +25,6 @@ public:
 #endif // _LINUX
     
     using state_type = State;
-    using policy_type = Policy;
     using reward_type = Reward;
 
     using id_type = ID;
@@ -116,5 +115,4 @@ private:
     // Five in a row
     int criteria = 5;
 };
-
 #endif /* gomoku_hpp */
