@@ -232,7 +232,7 @@ int Gomoku::check_win(const Board& board, int player, const Action& action) cons
         return WIN;
 
     auto matrix = board.slice(0,0,1) + board.slice(0,1,2);
-    if (!matrix.any().item<int>())
+    if (matrix.all().item<int>())
         return DRAW;
 
     return CONTINUE;
