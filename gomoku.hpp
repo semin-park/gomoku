@@ -11,6 +11,7 @@
 
 #include <array>
 #include <set>
+#include <sstream>
 #include <string>
 #include <tuple>
 
@@ -32,7 +33,7 @@ public:
     using action_type = Action;
     
 private:
-    enum { DRAW, WIN, CONTINUE };
+    enum { DRAW, WIN, LOSE, CONTINUE };
 
     int size {9}; // width and height
     int c_in {3};
@@ -91,7 +92,7 @@ public:
 
     State copy(const State& other) const;
     
-    void print(const State& state) const;
+    std::stringstream to_string(const State& state) const;
 
     static std::string action_string(const Action& action); // for debugging
 
@@ -101,13 +102,13 @@ private:
 
     int check_win(const Board& board, int player, const Action& action) const;
 
-    bool check_main_diagonal(const Board& board, int player, const Action& action) const;
+    int check_main_diagonal(const Board& board, int player, const Action& action) const;
 
-    bool check_anti_diagonal(const Board& board, int player, const Action& action) const;
+    int check_anti_diagonal(const Board& board, int player, const Action& action) const;
 
-    bool check_row(const Board& board, int player, const Action& action) const;
+    int check_row(const Board& board, int player, const Action& action) const;
 
-    bool check_column(const Board& board, int player, const Action& action) const;
+    int check_column(const Board& board, int player, const Action& action) const;
     
     // Constructor private
     Gomoku();

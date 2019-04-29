@@ -43,7 +43,7 @@ std::tuple<State, Reward, bool> Gomoku::step(const State& state, const Action& a
     // throw if the given action is not valid
     int player = get_player(state);
     if (player == 7) {
-        print(state);
+        std::cout << to_string(state).str() << std::endl;
         std::cout << board << std::endl;
         throw std::runtime_error("Player == 7");
     }
@@ -53,7 +53,7 @@ std::tuple<State, Reward, bool> Gomoku::step(const State& state, const Action& a
     auto it = std::find(actions.begin(), actions.end(), action);
     if (it == actions.end()) {
         std::cout << board << std::endl;
-        print(state);
+        std::cout << to_string(state).str() << std::endl;
         std::cout << "Possible actions: ";
         for (auto& a : actions) {
             std::cout << action_string(a) << ',';
@@ -81,10 +81,11 @@ std::tuple<State, Reward, bool> Gomoku::step(const State& state, const Action& a
     
     Reward reward = torch::zeros({2});
     if (status == WIN) {
-        float data[] = {1,-1};
-        reward = torch::from_blob(data, {2}).clone();
-        if (player != 0)
-            reward *= -1;
+        reward[player] = 1;
+        reward[!player] = -1;
+    } else if (status == LOSE) {
+        reward[player] = -1;
+        reward[!player] = 1;
     }
 
     State next_state{id, board, actions};
@@ -178,22 +179,23 @@ State Gomoku::copy(const State& other) const
     return {id, board, pos};
 }
 
-void Gomoku::print(const State& state) const
+std::stringstream Gomoku::to_string(const State& state) const
 {
     static std::string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    std::stringstream stream;
 
     const auto& board_ = get_board(state);
     auto board = board_.slice(0,0,1) + 2 * board_.slice(0,1,2);
     auto board_a = board.accessor<uint8_t, 3>();
     
-    std::cout << "   ";
-    for (char c : alphabet.substr(0,size)) std::cout << c << ' ';
-    std::cout << std::endl;
+    stream << "   ";
+    for (char c : alphabet.substr(0,size)) stream << c << ' ';
+    stream << std::endl;
     
     char mark;
     for (int i = 0; i < size; i++) {
         
-        std::cout << std::setw(2) << i << ' ';
+        stream << std::setw(2) << i << ' ';
         for (int j = 0; j < size; j++) {
             
             mark = '.';
@@ -204,11 +206,12 @@ void Gomoku::print(const State& state) const
             } else if (board_a[0][i][j] > 2) {
                 mark = '?';
             }
-            std::cout << mark << ' ';
+            stream << mark << ' ';
             
         }
-        std::cout << std::endl;
+        stream << std::endl;
     }
+    return stream;
 }
 
 
@@ -224,12 +227,21 @@ Positions Gomoku::get_positions(const State& state) const
 
 int Gomoku::check_win(const Board& board, int player, const Action& action) const
 {
-    // No LOSE status, because the current player can't lose.
-    if (check_row(board, player, action) ||
-        check_column(board, player, action) ||
-        check_main_diagonal(board, player, action) ||
-        check_anti_diagonal(board, player, action))
-        return WIN;
+    int row_status = check_row(board, player, action);
+    if (row_status != CONTINUE)
+        return row_status;
+
+    int col_status = check_column(board, player, action);
+    if (col_status != CONTINUE)
+        return col_status;
+
+    int main_diag_status = check_main_diagonal(board, player, action);
+    if (main_diag_status != CONTINUE)
+        return main_diag_status;
+
+    int anti_diag_status = check_anti_diagonal(board, player, action);
+    if (anti_diag_status != CONTINUE)
+        return anti_diag_status;
 
     auto matrix = board.slice(0,0,1) + board.slice(0,1,2);
     if (matrix.all().item<int>())
@@ -238,7 +250,7 @@ int Gomoku::check_win(const Board& board, int player, const Action& action) cons
     return CONTINUE;
 }
 
-bool Gomoku::check_main_diagonal(const Board& board, int player, const Action& action) const
+int Gomoku::check_main_diagonal(const Board& board, int player, const Action& action) const
 {
     int i = action[0];
     int j = action[1];
@@ -256,10 +268,15 @@ bool Gomoku::check_main_diagonal(const Board& board, int player, const Action& a
         if (board_a[player][r][s] == 0)
             break;
     }
-    return (r - p > criteria) ? true : false;
+    int consecutive = r - p - 1;
+    if (consecutive == criteria)
+        return WIN;
+    if (consecutive > criteria)
+        return LOSE;
+    return CONTINUE;
 }
 
-bool Gomoku::check_anti_diagonal(const Board& board, int player, const Action& action) const
+int Gomoku::check_anti_diagonal(const Board& board, int player, const Action& action) const
 {
     int i = action[0];
     int j = action[1];
@@ -277,10 +294,15 @@ bool Gomoku::check_anti_diagonal(const Board& board, int player, const Action& a
         if (board_a[player][r][s] == 0)
             break;
     }
-    return (r - p > criteria) ? true : false;
+    int consecutive = r - p - 1;
+    if (consecutive == criteria)
+        return WIN;
+    if (consecutive > criteria)
+        return LOSE;
+    return CONTINUE;
 }
 
-bool Gomoku::check_row(const Board& board, int player, const Action& action) const
+int Gomoku::check_row(const Board& board, int player, const Action& action) const
 {
     int i = action[0];
     int j = action[1];
@@ -297,10 +319,15 @@ bool Gomoku::check_row(const Board& board, int player, const Action& action) con
         if (board_a[player][i][r] == 0)
             break;
     }
-    return (r - l > criteria) ? true : false;
+    int consecutive = r - l - 1;
+    if (consecutive == criteria)
+        return WIN;
+    if (consecutive > criteria)
+        return LOSE;
+    return CONTINUE;
 }
 
-bool Gomoku::check_column(const Board& board, int player, const Action& action) const
+int Gomoku::check_column(const Board& board, int player, const Action& action) const
 {
     int i = action[0];
     int j = action[1];
@@ -317,5 +344,10 @@ bool Gomoku::check_column(const Board& board, int player, const Action& action) 
         if (board_a[player][d][j] == 0)
             break;
     }
-    return (d - u > criteria) ? true : false;
+    int consecutive = d - u - 1;
+    if (consecutive == criteria)
+        return WIN;
+    if (consecutive > criteria)
+        return LOSE;
+    return CONTINUE;
 }
