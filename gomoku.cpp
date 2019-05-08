@@ -187,7 +187,7 @@ std::stringstream Gomoku::to_string(const State& state, const Action& action) co
     const auto& board_ = get_board(state);
     auto board = board_.slice(0,0,1) + 2 * board_.slice(0,1,2);
     if (action.size() == 2)
-        board[action[0]][action[1]] = 3;
+        board[0][action[0]][action[1]] = 3;
     auto board_a = board.accessor<uint8_t, 3>();
     
     stream << "   ";
