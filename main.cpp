@@ -54,7 +54,7 @@ int main(int argc, const char * argv[]) {
     // });
     
     std::cout << "Begin" << std::endl;
-    env.print(state);
+    env.to_string(state);
     
     int turn = 1;
     while (!done) {
@@ -75,7 +75,7 @@ int main(int argc, const char * argv[]) {
 
         if (done)
             std::cout << "Game finished. Reward: " << reward_a[0] << ',' << reward_a[1] << std::endl;
-        env.print(state);
+        env.to_string(state);
         
     }
     

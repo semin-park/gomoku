@@ -92,7 +92,7 @@ public:
 
     State copy(const State& other) const;
     
-    std::stringstream to_string(const State& state) const;
+    std::stringstream to_string(const State& state, const Action& action = {}) const;
 
     static std::string action_string(const Action& action); // for debugging
 

@@ -179,13 +179,15 @@ State Gomoku::copy(const State& other) const
     return {id, board, pos};
 }
 
-std::stringstream Gomoku::to_string(const State& state) const
+std::stringstream Gomoku::to_string(const State& state, const Action& action) const
 {
     static std::string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     std::stringstream stream;
 
     const auto& board_ = get_board(state);
     auto board = board_.slice(0,0,1) + 2 * board_.slice(0,1,2);
+    if (action.size() == 2)
+        board[action[0]][action[1]] = 3;
     auto board_a = board.accessor<uint8_t, 3>();
     
     stream << "   ";
@@ -197,15 +199,18 @@ std::stringstream Gomoku::to_string(const State& state) const
         
         stream << std::setw(2) << i << ' ';
         for (int j = 0; j < size; j++) {
-            
-            mark = '.';
-            if (board_a[0][i][j] == 1) {
+            if (board_a[0][i][j] == 0) {
+                mark = '.';
+            } else if (board_a[0][i][j] == 1) {
                 mark = 'O';
             } else if (board_a[0][i][j] == 2) {
                 mark = 'X';
-            } else if (board_a[0][i][j] > 2) {
+            } else if (board_a[0][i][j] == 3) {
+                mark = 'Z';
+            } else {
                 mark = '?';
             }
+
             stream << mark << ' ';
             
         }
