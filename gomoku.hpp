@@ -35,7 +35,7 @@ public:
 private:
     enum { DRAW, WIN, LOSE, CONTINUE };
 
-    int size {9}; // width and height
+    int size {19}; // width and height
     int c_in {3};
     int c_out {1};
     int turn = 2; // index for turn
